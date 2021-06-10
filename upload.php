@@ -85,24 +85,53 @@ if (isset($_POST['submit'])) {
             }
         }
         $finalResult[] = $pairArray[$i];
-        $percents[] = $pairArray[$i]['percents'];
+
     }
     //delete duplicates for final result
     $finalResult = array_map("unserialize", array_unique(array_map("serialize", $finalResult)));
 
-    //leave unique values and remove zeros
-    $percents = array_filter(array_unique($percents));
-    //count average
-    $average = array_sum($percents) / count($percents);
+//
+//
+
+    function removeElementWithValue($array, $key, $value){
+        foreach($array as $subKey => $subArray){
+            if($subArray[$key] == $value){
+                unset($array[$subKey]);
+            }
+        }
+        return $array;
+    }
+    usort($finalResult, function ($a, $b) {
+        return $b['percents'] - $a['percents'];
+    });
+
+
+    $sum = [];
+    function show($array,&$sum){
+        if(count($array) == 0){
+            return;
+        }
+        foreach ($array as $key => $value) {
+
+            $name1 = $value['name1'];
+            $name2 = $value['name2'];
+            $percents = $value['percents'];
+            $sum[] = $percents;
+            echo " <b>$name1</b> will be matched with <b>$name2</b> - <b>$percents%</b><br>";
+            $array = removeElementWithValue($array,'name1',$name1);
+            $array = removeElementWithValue($array,'name2',$name1);
+            $array = removeElementWithValue($array,'name1',$name2);
+            $array = removeElementWithValue($array,'name2',$name2);
+            return show($array,$sum);
+        }
+    }
+
+    show($finalResult,$sum);
+
+    $sum = array_filter($sum);
+    $average = array_sum($sum)/count($sum);
 
     echo "In the case of $count employees the highest average match score is $average%<br>";
-
-    foreach ($finalResult as $key => $value) {
-        $name1 = $value['name1'];
-        $name2 = $value['name2'];
-        $percents = $value['percents'];
-        echo " <b>$name1</b> will be matched with <b>$name2</b> - <b>$percents%</b><br>";
-    }
 
     echo "<br>Note: There are rumors that the company has plans to update its matching requirements.";
 }
